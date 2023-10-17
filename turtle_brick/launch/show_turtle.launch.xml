@@ -1,0 +1,19 @@
+  <launch>
+    <arg name="use_jsp"  default="gui" description="use_jsp: gui->joint_state_publisher_gui jsp->joint_state_publisher"/>
+    <arg name="rviz_config" default="turtle_test.rviz" description="it opens a rviz configuration saved in config"/>
+
+   <!-- Load the urdf into the parameter server. -->
+   <node pkg="robot_state_publisher" exec="robot_state_publisher" name="rsp" >
+   <param name="robot_description" value="$(command '$(exec-in-pkg xacro xacro) $(find-pkg-share turtle_brick)/robot.urdf.xacro')" />
+    </node>
+
+   <node pkg="joint_state_publisher" exec="joint_state_publisher" name="jsp" if="$(eval '\'$(var use_jsp)\' == \'jsp\'')">
+    </node>
+
+   <node pkg="joint_state_publisher_gui" exec="joint_state_publisher_gui" name="jsp_gui" if="$(eval '\'$(var use_jsp)\' == \'gui\'')">
+    </node>
+
+   <node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share turtle_brick)/$(var rviz_config)"/>
+
+
+  </launch>

@@ -1,0 +1,63 @@
+<robot name="slidebot">
+<!-- slidebot is a robot that has 1 linear and 1 rotational degree of freedom -->
+
+<!-- The base from which the body slides -->
+<link name="base_link" >
+  <visual>
+    <geometry>
+      <sphere radius="0.1" />
+     </geometry>
+     <material name="green_mat">
+         <color rgba="0 1 0 1" />
+     </material>
+   </visual>
+</link>
+
+<!-- the movable body -->
+<link name="body">
+  <visual>
+    <geometry>
+    <box size="3 2 1" />
+    </geometry>
+     <material name="red_mat">
+         <color rgba="1 0 0 0.5" />
+     </material>
+  </visual>
+</link>
+
+<link name="arm">
+  <visual>
+  <origin xyz="0 0 0.5" rpy="0 0 0" />
+   <geometry>
+     <cylinder radius="0.1" length="1.0" />
+   </geometry>
+     <material name="blue_mat">
+         <color rgba="0 0 1 1" />
+     </material>
+   </visual>
+</link>
+
+<joint name="linear" type="prismatic">
+  <parent link="base_link" />
+  <child link="body" />
+  <limit lower="-10" upper="10" effort="100" velocity="100" />
+</joint>
+
+<joint name="rotational" type="continuous">
+  <origin xyz="1.5 0 0.5" rpy="0 0 0" />
+  <parent link="body" />
+  <child link="arm" />
+</joint>
+</robot>
+
+<!-- My Scratch  -->
+  <link name="platform">
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${plat_radius}" length="${plat_length}"/>
+      </geometry>
+      <color rgba="0 1.0 1.0 1.0"/>
+    </visual>
+  </link>
+</robot>

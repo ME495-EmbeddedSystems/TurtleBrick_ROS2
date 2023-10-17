@@ -1,0 +1,10 @@
+  <launch>
+    <include file="$(find-pkg-share turtle_brick)/show_turtle.launch.xml">
+        <arg name="use_jsp" value="None"/>
+    </include>   
+
+    <node pkg="turtle_brick" exec="turtle_robot" name="turtle_robot" />
+    <node pkg="turtlesim" exec="turtlesim_node" name="roving_turtle" >
+        <param name="holonomic" value="True" />
+    </node> 
+  </launch>
