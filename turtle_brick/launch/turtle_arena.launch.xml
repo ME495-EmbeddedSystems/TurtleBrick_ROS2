@@ -1,0 +1,8 @@
+  <launch>
+    <include file="$(find-pkg-share turtle_brick)/run_turtle.launch.xml">
+    </include>   
+
+    <node pkg="turtle_brick" exec="Catcher" name="catcher" >
+    </node>
+
+  </launch>

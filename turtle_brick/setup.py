@@ -16,6 +16,7 @@ setup(
                                    'launch/show_turtle_launch.py',
                                    'urdf/robot.urdf.xacro',
                                    'launch/run_turtle.launch.xml',
+                                   'launch/turtle_arena.launch.xml',
                                    ]),
     ],
     install_requires=['setuptools'],
@@ -27,8 +28,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+         
             'turtle_robot = turtle_brick.turtle_node: main',
-            'Arena = turtle_brick.Arena:main'
+            'Arena = turtle_brick.Arena:main',
+            'Catcher = turtle_brick.Control:main',
         ],
     },
 )

@@ -1,34 +1,27 @@
-"""Draw robotic grippers using RVIZ markers and make them interactive. """
-
-
 import rclpy
 from rclpy.node import Node
-from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from geometry_msgs.msg import TransformStamped
-from interactive_markers.interactive_marker_server import InteractiveMarkerServer, InteractiveMarker
-from visualization_msgs.msg import Marker, InteractiveMarkerControl, MarkerArray
+from visualization_msgs.msg import Marker
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from enum import Enum, auto
 #from turtle_brick_interfaces.srv import 
-from geometry_msgs.msg import Twist, Vector3, PoseStamped, TransformStamped
-from sensor_msgs.msg import JointState
-from math import pi
-from random import uniform
+from geometry_msgs.msg import TransformStamped
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 from std_srvs.srv import Empty
-from math import sqrt, atan2
-from rclpy.callback_groups import ReentrantCallbackGroup
-from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 import tf_transformations
-from tf2_ros import StaticTransformBroadcaster
 from turtle_brick_interfaces.srv import Place
 from turtlesim.msg import Pose
 
 
 class State(Enum):
+    """enum state of the brick
+
+    Args:
+        Enum (enum/Enum)
+    """
     COLLIDE=auto()
     FALL=auto()
     STOP=auto()
@@ -40,12 +33,17 @@ class Arena(Node):
     visualization_marker (visualization_messages/msg/Marker) - The markers that we are drawing
     
     SUBSCRIBES:
-    Subscribes: to an interactive marker server
+    turtle1/pose (turtlesim/msg/Pose) -the turtle's real time locations
+
+    SERVICES:
+    place (turtle_brick_interfaces/srv/Place) -place the brick to the input location
+    drop (std_srvs/srv/Empty)
     """
 
     def __init__(self):
         super().__init__("arena")
-        
+        """_summary_
+        """
         #Parameters and functions
         
 
@@ -68,11 +66,14 @@ class Arena(Node):
         #Drop process parameters
         self.plat_z = 5.1
         self.plat_r = 2.0 #radius of platform
-        self.gravity = -1.0 
+        self.gravity = -0.3 
         self.period = 1.0/self.frequency
         self.v0 = 0.0
         self.base_x = None
         self.base_y = None
+        self.br_ba_dx = 0.0
+        self.br_ba_dy = 0.0
+        self.br_ba_dz = 0.0
         
         
 
@@ -177,6 +178,7 @@ class Arena(Node):
     
 
     def brick_show(self):
+        """Show brick function"""
         brick = Marker()
         brick.header.frame_id = "brick"
         brick.header.stamp = self.get_clock().now().to_msg()
@@ -202,6 +204,9 @@ class Arena(Node):
             
 
     def timer_callback(self):
+        """constantly publishing the brick frame to world frame, 
+        determine the enum state of the brick
+        """
         #transfer the brick frame to world frame
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
@@ -220,8 +225,10 @@ class Arena(Node):
         t.transform.rotation.w = q[3]
 
         self.brick_world_broadcaster.sendTransform(t)
-
-
+        # self.get_logger().info(f"x:{self.b_curr_x}")
+        # self.get_logger().info(f"y:{self.b_curr_y}")
+        # self.get_logger().info(f"z:{self.b_curr_z}")
+        self.get_logger().info(self.state.__str__())
         #activate fall process if state is changing to fall
         if self.state == State.FALL:
             self.b_curr_z = self.b_curr_z + self.v0*self.period + 0.5*self.gravity*self.period**2
@@ -231,21 +238,40 @@ class Arena(Node):
             x_upper_bound = self.base_x + self.plat_r
             y_upper_bound = self.base_y + self.plat_r
             y_lower_bound = self.base_y - self.plat_r
-            if self.b_curr_x < x_upper_bound and self.b_curr_x > x_lower_bound and self.b_curr_y < y_upper_bound and self.b_curr_y > y_lower_bound and (self.b_curr_z-0.1-0.001)<self.plat_z:
-                #hit the platform
+            if self.b_curr_x < x_upper_bound and self.b_curr_x > x_lower_bound and self.b_curr_y < y_upper_bound and self.b_curr_y > y_lower_bound and (self.b_curr_z-0.1)<(self.plat_z+0.05) and (self.b_curr_z-0.1) >= (self.plat_z-0.1+0.05):
+                #hit the platform, calculating the difference in xyz frame for brick and base
+                #z is not changing for each one
                 self.state = State.COLLIDE
+                self.br_ba_dx = self.b_curr_x - self.base_x
+                self.br_ba_dy = self.b_curr_y - self.base_y
+
             elif self.b_curr_z < 0 or self.b_curr_z == 0:
                 #hit the groud
                 self.state = State.STOP
+
+        if self.state == State.COLLIDE:
+            self.b_curr_x = self.br_ba_dx + self.base_x
+            self.b_curr_y = self.br_ba_dy + self.base_y
 
 
             
 
 
     def place_callback(self, request, response):
+        """callback function to place the brick to the designed 
+        Args:
+            request (Place): request the user input location for the brick 
+            response (Empty): return nothing
+
+        Returns:
+            _type_: _description_
+        """
+        if self.state == State.COLLIDE:
+            self.state = State.STOP
         self.b_curr_x = request.x
         self.b_curr_y = request.y
         self.b_curr_z = request.z
+    
         if self.if_show == False:
             self.brick_show()
             self.if_show = True
@@ -253,10 +279,19 @@ class Arena(Node):
         return response
 
     def drop_callback(self, request, response):
+        """call back function to switch the brick's state at fall
+
+        Returns:Empty -nothing
+        """
         self.state = State.FALL
         return response
 
     def listener_callback(self, msg:Pose):
+        """callback function receiving baselink's location
+
+        Args:
+            msg (Pose): baselink's location
+        """
         self.base_x = msg.x
         self.base_y = msg.y
         

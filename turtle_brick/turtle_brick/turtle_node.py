@@ -1,14 +1,9 @@
-from enum import Enum, auto
 #from turtle_brick_interfaces.srv import 
 from geometry_msgs.msg import Twist, Vector3, PoseStamped, TransformStamped
 from sensor_msgs.msg import JointState
-from math import pi
-from random import uniform
 import rclpy
 from rclpy.node import Node
-from turtlesim.srv import TeleportAbsolute, SetPen
 from rcl_interfaces.msg import ParameterDescriptor
-from std_srvs.srv import Empty
 from math import sqrt, atan2
 from rclpy.callback_groups import ReentrantCallbackGroup
 from turtlesim.msg import Pose
@@ -18,18 +13,6 @@ import tf_transformations
 from tf2_ros import StaticTransformBroadcaster
 from turtle_brick_interfaces.msg import Tilt
 
-""" ros2 topic list -t
-/clicked_point [geometry_msgs/msg/PointStamped]
-/goal_pose [geometry_msgs/msg/PoseStamped]
-/initialpose [geometry_msgs/msg/PoseWithCovarianceStamped]
-/joint_states [sensor_msgs/msg/JointState]
-/parameter_events [rcl_interfaces/msg/ParameterEvent]
-/robot_description [std_msgs/msg/String]
-/rosout [rcl_interfaces/msg/Log]
-/tf [tf2_msgs/msg/TFMessage]
-/tf_static [tf2_msgs/msg/TFMessage]
-
-"""
 
 def turtle_twist(xdot, ydot):
     """ Create a twist suitable for a turtle
@@ -46,20 +29,23 @@ def turtle_twist(xdot, ydot):
 
 
 class turtle_robot(Node):
-    """A turtle robot node that will
+    """A turtle robot node that could control the robot and react to the click on the map
 
     Args:
         Node (ros node):
-        
+        PARAMETER:
+        frequency:The frequency of timer callback function
+        tolerance:The tolerance distance of reaching target
+        max_velocity: The max velocity the robot should go
         PUBLISH:
-        joint_states:three joints's angle value  (JointState)
+        joint_states:three joints's angle value  [JointState]
         odom: odometry message [Odometry]
         cmd_vel:command [Twist]
     
         SUBSCRIBE:
-        goal_pose (PoseStamped)
-        tilt (Tilt)
-        turtle1/pose (Pose)
+        goal_pose [PoseStamped]
+        tilt [Tilt]
+        turtle1/pose [Pose]
 
         PARAMETER:
         frequency:frequency of timer_callback
@@ -85,11 +71,14 @@ class turtle_robot(Node):
         self.cbgroup = ReentrantCallbackGroup()
 
         self.declare_parameter("frequency", 100.0, 
-                               ParameterDescriptor(description="The frequency of the DEBUG message Issuing Command"))
+                               ParameterDescriptor(description="The frequency of timer callback function"))
         self.declare_parameter("tolerance", 0.05, 
-                               ParameterDescriptor(description="The tolerance of the DEBUG message Issuing Command"))
+                               ParameterDescriptor(description="The tolerance distance of reaching target"))
+        self.declare_parameter("max_velocity", 1.0, 
+                               ParameterDescriptor(description="The max velocity the robot should go"))
         self.frequency = self.get_parameter("frequency").get_parameter_value().double_value
         self.tolerance = self.get_parameter("tolerance").get_parameter_value().double_value
+        self.max_velocity = self.get_parameter("max_velocity").get_parameter_value().double_value
         
         self.joint_state_publisher = self.create_publisher(JointState, "joint_states", 10)
         self.odom_publisher = self.create_publisher(Odometry, "odom", 10)
@@ -140,14 +129,21 @@ class turtle_robot(Node):
             dist = sqrt((self.tar_y-self.curr_y)**2+(self.tar_x-self.curr_x)**2)
             self.wheel_dir = atan2((self.tar_y-self.curr_y),(self.tar_x-self.curr_x))
             if (dist > self.tolerance):
-                x_velocity = (self.tar_x- self.curr_x)/3
-                y_velocity = (self.tar_y - self.curr_y)/3
+                deltax = self.tar_x- self.curr_x
+                deltay = self.tar_y - self.curr_y
+                x_velocity = self.max_velocity*(deltax)/(sqrt(deltax**2+deltay**2))
+                y_velocity = self.max_velocity*(deltay)/(sqrt(deltax**2+deltay**2))
 
                 self.cmd_publisher.publish(turtle_twist(x_velocity, y_velocity))
+
+
+            else:
+                self.cmd_publisher.publish(turtle_twist(0.0, 0.0))
+
                 
 
     def listener_callback(self, msg):
-        """continually update the current turtle position
+        """callback function that continually update the current turtle position
 
         Args:
             msg (Pose): the position of turtle current position
@@ -185,7 +181,11 @@ class turtle_robot(Node):
             self.odom_base_broadcaster.sendTransform(t)
     
     def listerner_callback_goal_pose(self, msg:PoseStamped):
+        """a callback function receives the position of the target position clicked on map
 
+        Args:
+            msg (PoseStamped): position of the target position clicked on map
+        """
         self.tar_x = msg.pose.position.x
         self.tar_y = msg.pose.position.y
     
