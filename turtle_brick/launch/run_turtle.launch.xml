@@ -9,6 +9,7 @@
     <node pkg="turtlesim" exec="turtlesim_node" name="roving_turtle" >
         <param name="holonomic" value="True" />
     </node> 
-    <node pkg="turtle_brick" exec="Arena" name="Arena" >
+    <node pkg="turtle_brick" exec="Arena" name="Arena" > 
+        <param name="frequency" value="250.0" />
     </node> 
   </launch>

@@ -1,0 +1,4 @@
+float64 x #user input on brick location x, should be a double
+float64 y #user input on brick_location_y, should be a double
+float64 z #user input on brick_location_z, should be a double
+---
