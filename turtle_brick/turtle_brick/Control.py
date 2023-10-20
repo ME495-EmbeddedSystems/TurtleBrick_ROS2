@@ -40,9 +40,9 @@ class Catcher(Node):
     def __init__(self):
         super().__init__("catcher")
         
-        self.declare_parameter("frequency", 250.0, 
+        self.declare_parameter("con_frequency", 250.0, 
                                ParameterDescriptor(description="The frequency"))
-        self.frequency = self.get_parameter("frequency").get_parameter_value().double_value
+        self.frequency = self.get_parameter("con_frequency").get_parameter_value().double_value
         self.timer = self.create_timer(1.0/self.frequency, self.timer_callback)
 
         self.brick_location_subscriber = self.create_subscription(TFMessage, "tf", self.br_callback, 10)
@@ -57,7 +57,7 @@ class Catcher(Node):
         self.gravity = -0.3
         self.falling = False
 
-        self.declare_parameter("max_velocity", 2.0, 
+        self.declare_parameter("max_velocity", 1.5, 
                                ParameterDescriptor(description="The max velocity of robot"))
         self.max_velocity = self.get_parameter("max_velocity").get_parameter_value().double_value
         self.cmd_publisher = self.create_publisher(Twist, "cmd_vel", 10)
@@ -101,21 +101,25 @@ class Catcher(Node):
 
             brick_base_planar_dist = sqrt(dx**2 + dy**2)
             time_robot_reach = brick_base_planar_dist/self.max_velocity
+            
             if(self.brick_z - self.robot_height > 0):
-                time_brick_falling = sqrt(-2*self.gravity*(self.brick_z - self.robot_height))
-
+                time_brick_falling = sqrt(-2*(self.brick_z - self.robot_height)/self.gravity)-0.5 #0.5 for time tolerance
+                
                 if self.brick_z != self.brick_z_last and self.brick_x == self.brick_x_last and self.brick_y == self.brick_y_last:
                     self.falling = True
+                    
                 else:
                     self.falling = False
-
+                    
                 if time_brick_falling >= time_robot_reach and self.falling == True:
+                    
                     goal = PoseStamped()
                     goal.header.stamp = self.get_clock().now().to_msg()
                     goal.header.frame_id = "world"
                     goal.pose.position.x = self.brick_x
                     goal.pose.position.y = self.brick_y
                     self.goal_publisher.publish(goal)
+                
                     
             else:
                 self.get_logger().info("Unreachable")

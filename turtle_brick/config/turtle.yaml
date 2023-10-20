@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    platform_height: 5.1
+    wheel_radius: 0.5
+    max_velocity: 1.0
+    gravity_accel: -1.0
+    base_width: 2.0
+    ar_frequency: 250.0
+    tn_frequency: 100.0
+    con_frequency: 250.0

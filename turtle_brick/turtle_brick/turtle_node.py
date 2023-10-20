@@ -70,13 +70,13 @@ class turtle_robot(Node):
 
         self.cbgroup = ReentrantCallbackGroup()
 
-        self.declare_parameter("frequency", 100.0, 
+        self.declare_parameter("tn_frequency", 100.0, 
                                ParameterDescriptor(description="The frequency of timer callback function"))
         self.declare_parameter("tolerance", 0.05, 
                                ParameterDescriptor(description="The tolerance distance of reaching target"))
-        self.declare_parameter("max_velocity", 1.0, 
+        self.declare_parameter("max_velocity", 1.5, 
                                ParameterDescriptor(description="The max velocity the robot should go"))
-        self.frequency = self.get_parameter("frequency").get_parameter_value().double_value
+        self.frequency = self.get_parameter("tn_frequency").get_parameter_value().double_value
         self.tolerance = self.get_parameter("tolerance").get_parameter_value().double_value
         self.max_velocity = self.get_parameter("max_velocity").get_parameter_value().double_value
         

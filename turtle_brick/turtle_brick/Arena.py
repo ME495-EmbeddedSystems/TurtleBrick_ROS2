@@ -51,9 +51,9 @@ class Arena(Node):
         self.b_curr_y = 6.0
         self.b_curr_z = 6.0
         self.state = State.STOP
-        self.declare_parameter("frequency", 250.0, 
+        self.declare_parameter("ar_frequency", 250.0, 
                                ParameterDescriptor(description="The frequency"))
-        self.frequency = self.get_parameter("frequency").get_parameter_value().double_value
+        self.frequency = self.get_parameter("ar_frequency").get_parameter_value().double_value
         self.timer = self.create_timer(1.0/self.frequency, self.timer_callback)
         self.brick_world_broadcaster = TransformBroadcaster(self)
         self.place = self.create_service(Place, "place",  self.place_callback)
@@ -225,10 +225,7 @@ class Arena(Node):
         t.transform.rotation.w = q[3]
 
         self.brick_world_broadcaster.sendTransform(t)
-        # self.get_logger().info(f"x:{self.b_curr_x}")
-        # self.get_logger().info(f"y:{self.b_curr_y}")
-        # self.get_logger().info(f"z:{self.b_curr_z}")
-        self.get_logger().info(self.state.__str__())
+
         #activate fall process if state is changing to fall
         if self.state == State.FALL:
             self.b_curr_z = self.b_curr_z + self.v0*self.period + 0.5*self.gravity*self.period**2

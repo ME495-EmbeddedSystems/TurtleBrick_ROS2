@@ -11,12 +11,12 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml', 
                                    'launch/show_turtle.launch.xml', 
-                                   'urdf/slidebot.urdf',
                                    'config/turtle_test.rviz',
                                    'launch/show_turtle_launch.py',
                                    'urdf/robot.urdf.xacro',
                                    'launch/run_turtle.launch.xml',
                                    'launch/turtle_arena.launch.xml',
+                                   'config/turtle.yaml'
                                    ]),
     ],
     install_requires=['setuptools'],

@@ -1,14 +1,14 @@
 <robot name="myfirst" xmlns:xacro="http://wiki.ros.org/wiki/xacro">
-
+<xacro:property name="prop" value="${xacro.load_yaml('$(find turtle_brick)/turtle.yaml')['/**']['ros__parameters']}"/>
 <xacro:property name="base_length" value="2"/>
-<xacro:property name="base_width" value="2"/>
+<xacro:property name="base_width" value="${prop['base_width']}"/>
 <xacro:property name="base_height" value="2"/>
 <xacro:property name="plat_radius" value="2"/>
 <xacro:property name="plat_length" value="0.1"/>
 <xacro:property name="cyl_length" value="1"/>
 <xacro:property name="stem_length" value="1"/>
 <xacro:property name="wheel_thickness" value="0.3"/>
-<xacro:property name="wheel_radius" value="0.5"/>
+<xacro:property name="wheel_radius" value="${prop['wheel_radius']}"/>
 
 
 

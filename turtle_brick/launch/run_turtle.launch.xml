@@ -5,11 +5,18 @@
 
     <node pkg="turtle_brick" exec="turtle_robot" name="turtle_robot" >
       <remap from="cmd_vel" to="turtle1/cmd_vel" />
+      <param from="$(find-pkg-share turtle_brick)/turtle.yaml"/>
     </node>
     <node pkg="turtlesim" exec="turtlesim_node" name="roving_turtle" >
         <param name="holonomic" value="True" />
     </node> 
     <node pkg="turtle_brick" exec="Arena" name="Arena" > 
         <param name="frequency" value="250.0" />
+        <param from="$(find-pkg-share turtle_brick)/turtle.yaml"/>
+    </node> 
+    
+    <node pkg="turtle_brick" exec="Catcher" name="control" > 
+        <param name="frequency" value="100.0" />
+        <param from="$(find-pkg-share turtle_brick)/turtle.yaml"/>
     </node> 
   </launch>
