@@ -1,0 +1,7 @@
+Videos are mislabeled, the one that cannot be caught shows the robot catching the brick and vice versa
+No unreachable marker is shown
+The tilt is not implemented
+some tests do not pass
+documentation for ROS node should include the topic/service name and the type and a description (some parts of each are missing)
+package description not updated
+tests not implemented
